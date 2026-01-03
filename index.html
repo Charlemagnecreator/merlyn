@@ -63,6 +63,7 @@
           <p class="text-gray-600 mb-6 max-w-xl">A compact, responsive single-page application demo with polished UI elements, subtle animations, and a shareable QR code.</p>
           <div class="flex items-center gap-3 justify-center md:justify-start">
             <button onclick="openQrModal()" class="px-5 py-3 bg-emerald-500 text-white rounded-lg shadow-lg hover:bg-emerald-600 transition">Get Started</button>
+            <button id="cameraBtn" class="px-4 py-3 bg-yellow-500 text-white rounded-lg shadow hover:bg-yellow-600 transition">Camera</button>
             <button id="uploadBtn" class="px-4 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Upload</button>
             <button id="showQrBtn" class="px-4 py-3 bg-white card-glass rounded-lg shadow hover:shadow-md transition">Show QR</button>
           </div>
@@ -80,7 +81,7 @@
     </section>
 
     <!-- Upload area -->
-    <input type="file" id="fileInput" class="hidden" accept="image/*,text/*" />
+    <input type="file" id="fileInput" class="hidden" accept="image/*,text/*" capture="environment" />
     <div id="uploadArea" class="mt-8 max-w-2xl mx-auto hidden">
       <div class="p-4 bg-white rounded-lg shadow flex items-center justify-between">
         <div class="flex items-center gap-4">
@@ -114,6 +115,22 @@
         <div class="mt-3 flex justify-between">
           <a id="galleryDownload" class="px-4 py-2 bg-indigo-600 text-white rounded" download>Download</a>
           <button id="galleryClose" class="px-4 py-2 bg-gray-100 rounded">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="fixed inset-0 hidden items-center justify-center z-50">
+      <div class="absolute inset-0 backdrop" id="cameraBackdrop"></div>
+      <div class="relative z-10 max-w-md w-full mx-4 bg-white rounded-lg p-4 shadow-lg">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="font-semibold">Camera</h4>
+          <button id="cameraClose" class="px-2 py-1 bg-gray-100 rounded">Close</button>
+        </div>
+        <video id="cameraVideo" autoplay playsinline class="w-full rounded-md bg-black"></video>
+        <div class="mt-3 flex items-center justify-between">
+          <button id="cameraCapture" class="px-4 py-2 bg-yellow-500 text-white rounded">Capture</button>
+          <button id="cameraFlip" class="px-4 py-2 bg-gray-100 rounded">Flip</button>
         </div>
       </div>
     </div>
@@ -357,6 +374,90 @@
 
     galleryBackdrop.addEventListener('click', closeGalleryModal);
     galleryClose.addEventListener('click', closeGalleryModal);
+
+    // Camera handlers
+    const cameraBtn = document.getElementById('cameraBtn');
+    const cameraModal = document.getElementById('cameraModal');
+    const cameraBackdrop = document.getElementById('cameraBackdrop');
+    const cameraVideo = document.getElementById('cameraVideo');
+    const cameraCapture = document.getElementById('cameraCapture');
+    const cameraClose = document.getElementById('cameraClose');
+    const cameraFlip = document.getElementById('cameraFlip');
+    let cameraStream = null;
+    let cameraFacing = 'environment';
+
+    async function startCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('Camera not supported in this browser.');
+        return;
+      }
+      try {
+        const constraints = { video: { facingMode: cameraFacing } };
+        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        cameraVideo.srcObject = cameraStream;
+        await cameraVideo.play();
+      } catch (e) {
+        console.error('Camera error', e);
+        alert('Could not start camera: ' + (e.message || e));
+      }
+    }
+
+    function stopCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+      }
+      if (cameraVideo) cameraVideo.srcObject = null;
+    }
+
+    function openCameraModal() {
+      if (!cameraModal) return;
+      cameraModal.classList.remove('hidden');
+      cameraModal.classList.add('flex');
+      startCamera();
+    }
+
+    function closeCameraModal() {
+      stopCamera();
+      if (!cameraModal) return;
+      cameraModal.classList.add('hidden');
+      cameraModal.classList.remove('flex');
+    }
+
+    if (cameraBtn) cameraBtn.addEventListener('click', openCameraModal);
+    if (cameraClose) cameraClose.addEventListener('click', closeCameraModal);
+    if (cameraBackdrop) cameraBackdrop.addEventListener('click', closeCameraModal);
+
+    if (cameraCapture) cameraCapture.addEventListener('click', async () => {
+      if (!cameraVideo) return;
+      const canvas = document.createElement('canvas');
+      canvas.width = cameraVideo.videoWidth || 1280;
+      canvas.height = cameraVideo.videoHeight || 720;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/png');
+      try {
+        await addImageToGalleryFromDataUrl(dataUrl, `photo-${Date.now()}.png`);
+        if (typeof confetti === 'function') confetti({ particleCount: 40, spread: 120, origin: { x: 0.5, y: 0.3 } });
+      } catch (e) {
+        console.warn('Failed to add camera image', e);
+      }
+      closeCameraModal();
+    });
+
+    if (cameraFlip) cameraFlip.addEventListener('click', () => {
+      cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+      if (cameraStream) { stopCamera(); startCamera(); }
+    });
+
+    // helper to add dataUrl
+    function addImageToGalleryFromDataUrl(dataUrl, name) {
+      const item = { name: name || `photo-${Date.now()}.png`, dataUrl, size: dataUrl.length };
+      gallery.unshift(item);
+      saveGallery();
+      renderGallery();
+      return Promise.resolve(item);
+    }
 
     // Upload & Download handlers
     const fileInput = document.getElementById('fileInput');
