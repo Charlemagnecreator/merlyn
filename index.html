@@ -45,7 +45,7 @@
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
   <header class="bg-white/60 backdrop-blur-sm shadow-sm">
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-      <h1 class="text-xl font-semibold">Merlyn</h1>
+      <h1 class="text-xl font-semibold">Happy Birthday tita Merlyn!</h1>
       <nav class="space-x-4">
         <a href="#/" class="nav-link text-sm text-gray-600 hover:text-gray-900 px-2 py-1 rounded transition">Home</a>
       </nav>
@@ -63,6 +63,7 @@
           <p class="text-gray-600 mb-6 max-w-xl">A compact, responsive single-page application demo with polished UI elements, subtle animations, and a shareable QR code.</p>
           <div class="flex items-center gap-3 justify-center md:justify-start">
             <button onclick="openQrModal()" class="px-5 py-3 bg-emerald-500 text-white rounded-lg shadow-lg hover:bg-emerald-600 transition">Get Started</button>
+            <button id="uploadBtn" class="px-4 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Upload</button>
             <button id="showQrBtn" class="px-4 py-3 bg-white card-glass rounded-lg shadow hover:shadow-md transition">Show QR</button>
           </div>
           <div class="mt-6 text-sm text-gray-500">Responsive • No build step • Uses public QR generator</div>
@@ -76,6 +77,46 @@
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- Upload area -->
+    <input type="file" id="fileInput" class="hidden" accept="image/*,text/*" />
+    <div id="uploadArea" class="mt-8 max-w-2xl mx-auto hidden">
+      <div class="p-4 bg-white rounded-lg shadow flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div id="filePreview" class="w-20 h-20 bg-gray-100 rounded flex items-center justify-center overflow-hidden"></div>
+          <div>
+            <div id="fileName" class="font-medium">No file</div>
+            <div id="fileSize" class="text-sm text-gray-500"></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <a id="downloadUploaded" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 hidden" download>Download</a>
+          <button id="clearUpload" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">Clear</button>
+        </div>
+      </div>
+      <pre id="textPreview" class="mt-4 bg-white p-4 rounded-md text-sm text-gray-700 hidden max-h-48 overflow-auto"></pre>
+    </div>
+
+    <!-- Gallery -->
+    <section id="gallerySection" class="mt-8 max-w-5xl mx-auto">
+      <h3 class="text-lg font-semibold mb-4">Gallery</h3>
+      <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <!-- Thumbnails inserted here -->
+      </div>
+    </section>
+
+    <!-- Gallery Modal -->
+    <div id="galleryModal" class="fixed inset-0 hidden items-center justify-center z-50">
+      <div class="absolute inset-0 backdrop" id="galleryBackdrop"></div>
+      <div class="relative z-10 max-w-3xl w-full mx-4">
+        <img id="galleryModalImage" src="" alt="" class="w-full rounded-lg shadow-lg" />
+        <div class="mt-3 flex justify-between">
+          <a id="galleryDownload" class="px-4 py-2 bg-indigo-600 text-white rounded" download>Download</a>
+          <button id="galleryClose" class="px-4 py-2 bg-gray-100 rounded">Close</button>
+        </div>
+      </div>
+    </div>
 
   </main>
 
@@ -215,7 +256,185 @@
       _confettiInterval = null;
     }
     // Start subtle confetti on load; it complements the page without being intrusive.
-    window.addEventListener('load', startConfettiLoop);
+    window.addEventListener('load', () => { startConfettiLoop(); loadGalleryFromStorage(); });
+
+    // Gallery storage & UI helpers
+    const galleryKey = 'merlynGallery';
+    let gallery = [];
+
+    function saveGallery() {
+      try {
+        localStorage.setItem(galleryKey, JSON.stringify(gallery));
+      } catch (e) {
+        console.warn('Could not save gallery to localStorage', e);
+      }
+    }
+
+    function loadGalleryFromStorage() {
+      const raw = localStorage.getItem(galleryKey);
+      if (!raw) return;
+      try {
+        gallery = JSON.parse(raw) || [];
+        renderGallery();
+      } catch (e) {
+        console.warn('Failed to parse gallery data', e);
+        gallery = [];
+      }
+    }
+
+    function renderGallery() {
+      const container = document.getElementById('gallery');
+      container.innerHTML = '';
+      gallery.forEach((item, i) => {
+        const card = document.createElement('div');
+        card.className = 'relative rounded-lg overflow-hidden shadow hover:shadow-md bg-white';
+        card.innerHTML = `
+          <img src="${item.dataUrl}" alt="${item.name}" class="w-full h-36 object-cover cursor-pointer" data-index="${i}" />
+          <div class="p-2 flex items-center justify-between text-sm">
+            <div class="truncate">${item.name}</div>
+            <div class="flex gap-2">
+              <a href="${item.dataUrl}" download="${item.name}" class="px-2 py-1 bg-indigo-600 text-white rounded">DL</a>
+              <button data-delete="${i}" class="px-2 py-1 bg-gray-100 rounded">Del</button>
+            </div>
+          </div>`;
+        container.appendChild(card);
+      });
+      // attach handlers
+      container.querySelectorAll('img[data-index]').forEach(img => img.addEventListener('click', (e) => {
+        const idx = Number(e.currentTarget.dataset.index);
+        openGalleryModal(gallery[idx]);
+      }));
+      container.querySelectorAll('button[data-delete]').forEach(btn => btn.addEventListener('click', (e) => {
+        const idx = Number(e.currentTarget.getAttribute('data-delete'));
+        if (confirm('Delete this image from gallery?')) deleteGalleryItem(idx);
+      }));
+    }
+
+    function deleteGalleryItem(index) {
+      if (index < 0 || index >= gallery.length) return;
+      gallery.splice(index, 1);
+      saveGallery();
+      renderGallery();
+    }
+
+    function addImageToGalleryFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result;
+          const item = { name: file.name, dataUrl, size: file.size };
+          gallery.unshift(item);
+          saveGallery();
+          renderGallery();
+          resolve(item);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Gallery modal handlers
+    const galleryModal = document.getElementById('galleryModal');
+    const galleryBackdrop = document.getElementById('galleryBackdrop');
+    const galleryModalImage = document.getElementById('galleryModalImage');
+    const galleryDownload = document.getElementById('galleryDownload');
+    const galleryClose = document.getElementById('galleryClose');
+
+    function openGalleryModal(item) {
+      if (!item) return;
+      galleryModalImage.src = item.dataUrl;
+      galleryDownload.href = item.dataUrl;
+      galleryDownload.download = item.name;
+      galleryModal.classList.remove('hidden');
+      galleryModal.classList.add('flex');
+    }
+
+    function closeGalleryModal() {
+      galleryModal.classList.add('hidden');
+      galleryModal.classList.remove('flex');
+      galleryModalImage.src = '';
+    }
+
+    galleryBackdrop.addEventListener('click', closeGalleryModal);
+    galleryClose.addEventListener('click', closeGalleryModal);
+
+    // Upload & Download handlers
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadArea = document.getElementById('uploadArea');
+    const filePreview = document.getElementById('filePreview');
+    const fileNameEl = document.getElementById('fileName');
+    const fileSizeEl = document.getElementById('fileSize');
+    const downloadUploaded = document.getElementById('downloadUploaded');
+    const clearUpload = document.getElementById('clearUpload');
+    const textPreview = document.getElementById('textPreview');
+    let uploadedObjectUrl = null;
+    let uploadedFile = null;
+
+    if (uploadBtn) {
+      uploadBtn.addEventListener('click', () => { if (fileInput) fileInput.click(); });
+    } else {
+      // Fallback: delegate clicks to document in case element isn't available at script time
+      document.addEventListener('click', (e) => { if (e.target && e.target.id === 'uploadBtn' && fileInput) fileInput.click(); });
+    }
+    if (fileInput) {
+      fileInput.addEventListener('change', handleFile);
+    } else {
+      console.warn('fileInput element not found');
+    }
+
+    async function handleFile(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      uploadedFile = file;
+      uploadArea.classList.remove('hidden');
+      fileNameEl.textContent = file.name;
+      fileSizeEl.textContent = `${(file.size/1024).toFixed(1)} KB`;
+      if (uploadedObjectUrl) { URL.revokeObjectURL(uploadedObjectUrl); uploadedObjectUrl = null; }
+      if (file.type.startsWith('image/')) {
+        uploadedObjectUrl = URL.createObjectURL(file);
+        filePreview.innerHTML = `<img src="${uploadedObjectUrl}" alt="${file.name}" class="w-full h-full object-cover">`;
+        downloadUploaded.href = uploadedObjectUrl; downloadUploaded.classList.remove('hidden');
+        textPreview.classList.add('hidden');
+        // add to gallery (persisted)
+        try {
+          await addImageToGalleryFromFile(file);
+          fileNameEl.textContent = file.name + ' · added to gallery';
+        } catch (e) {
+          console.warn('Failed to add to gallery', e);
+        }
+      } else if (file.type.startsWith('text/') || file.name.endsWith('.json') || file.name.endsWith('.md')) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const text = reader.result;
+          textPreview.textContent = text;
+          textPreview.classList.remove('hidden');
+          filePreview.innerHTML = '<div class="text-sm text-gray-500 px-2">Text file</div>';
+          const blobUrl = URL.createObjectURL(new Blob([text], {type: file.type || 'text/plain'}));
+          if (uploadedObjectUrl) URL.revokeObjectURL(uploadedObjectUrl);
+          uploadedObjectUrl = blobUrl;
+          downloadUploaded.href = uploadedObjectUrl;
+          downloadUploaded.classList.remove('hidden');
+        };
+        reader.readAsText(file);
+      } else {
+        uploadedObjectUrl = URL.createObjectURL(file);
+        filePreview.innerHTML = `<div class="text-sm text-gray-500 px-2">${file.type || 'file'}</div>`;
+        downloadUploaded.href = uploadedObjectUrl; downloadUploaded.classList.remove('hidden');
+        textPreview.classList.add('hidden');
+      }
+    }
+
+    clearUpload.addEventListener('click', () => {
+      uploadArea.classList.add('hidden');
+      fileInput.value = '';
+      if (uploadedObjectUrl) URL.revokeObjectURL(uploadedObjectUrl);
+      uploadedObjectUrl = null;
+      uploadedFile = null;
+      filePreview.innerHTML = '';
+      textPreview.textContent = '';
+      downloadUploaded.classList.add('hidden');
+    });
 
     // Ensure QR updates when route changes (so it points to the current route)
     window.addEventListener('hashchange', () => { if (!qrModal.classList.contains('hidden')) updateQr(); });
