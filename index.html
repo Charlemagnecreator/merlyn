@@ -1,11 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Merlyn</title>
+  <!-- Tailwind CDN + custom config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            merlyn: {
+              50: '#f8fafc',
+              100: '#eef2ff',
+              500: '#6366f1',
+              700: '#4f46e5'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'Segoe UI', 'Helvetica', 'Arial']
+          },
+          keyframes: {
+            float: { '0%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-6px)' }, '100%': { transform: 'translateY(0)' } }
+          },
+          animation: {
+            float: 'float 3s ease-in-out infinite'
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    /* Small style for QR modal backdrop & custom helpers */
+    .backdrop { background: rgba(0,0,0,0.6); }
+    .fade { transition: opacity .25s ease, transform .25s ease; }
+    .hero-pattern { background-image: radial-gradient(circle at 10% 20%, rgba(99,102,241,0.06), transparent 10%), radial-gradient(circle at 80% 80%, rgba(99,102,241,0.04), transparent 8%); }
+    .card-glass { background: rgba(255,255,255,0.7); backdrop-filter: blur(6px); }
+  </style>
 </head>
-<body>
-    
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+  <header class="bg-white/60 backdrop-blur-sm shadow-sm">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="text-xl font-semibold">Merlyn</h1>
+      <nav class="space-x-4">
+        <a href="#/" class="nav-link text-sm text-gray-600 hover:text-gray-900 px-2 py-1 rounded transition">Home</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-10 flex-1" id="app">
+    <!-- Views -->
+    <section id="home" class="view">
+      <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div class="text-center md:text-left">
+          <h2 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">Happy Birthday, Merlyn</span>
+          </h2>
+          <p class="text-gray-600 mb-6 max-w-xl">A compact, responsive single-page application demo with polished UI elements, subtle animations, and a shareable QR code.</p>
+          <div class="flex items-center gap-3 justify-center md:justify-start">
+            <button onclick="openQrModal()" class="px-5 py-3 bg-emerald-500 text-white rounded-lg shadow-lg hover:bg-emerald-600 transition">Get Started</button>
+            <button id="showQrBtn" class="px-4 py-3 bg-white card-glass rounded-lg shadow hover:shadow-md transition">Show QR</button>
+          </div>
+          <div class="mt-6 text-sm text-gray-500">Responsive • No build step • Uses public QR generator</div>
+        </div>
+        <div class="relative flex items-center justify-center">
+          <div class="w-72 h-72 rounded-xl shadow-2xl hero-pattern flex items-center justify-center animate-float">
+            <!-- Simple decorative SVG -->
+            <svg width="160" height="160" viewBox="0 0 24 24" fill="none" class="text-white opacity-90">
+              <path d="M12 2c1.657 0 3 1.343 3 3 0 .85-.337 1.62-.88 2.165l3.46 3.46a1 1 0 010 1.415L15.83 16.83a1 1 0 01-1.414 0l-3.46-3.46A3 3 0 0112 14c-1.657 0-3-1.343-3-3 0-.85.337-1.62.88-2.165L6.42 5.375A1 1 0 017.83 3.96L11.29 7.42A3 3 0 0112 5c0-1.657 1.343-3 3-3z" fill="currentColor"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+  </main>
+
+  <footer class="bg-white border-t py-4">
+    <div class="container mx-auto px-4 text-sm text-gray-500">© 2026 Merlyn — Tailwind SPA demo</div>
+  </footer>
+
+  <!-- QR Modal -->
+  <div id="qrModal" class="fixed inset-0 hidden items-center justify-center z-50">
+    <div class="absolute inset-0 backdrop" id="qrBackdrop"></div>
+    <div class="relative bg-white rounded-2xl p-6 shadow-2xl z-10 w-96 mx-4 transform transition duration-200 scale-95 opacity-0" id="qrCard">
+      <h3 class="text-xl font-semibold mb-4">Share this page</h3>
+      <div class="flex items-center justify-center mb-4">
+        <img id="qrImage" alt="QR code" class="w-56 h-56 bg-gray-100 rounded-lg shadow" />
+      </div>
+      <div class="text-sm text-gray-600 mb-4 text-center" id="pageUrl"></div>
+      <div class="flex gap-3 justify-between">
+        <div class="flex gap-2">
+          <button id="copyUrl" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition">Copy URL</button>
+          <a id="downloadQr" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition" download="merlyn-qr.png">Download</a>
+        </div>
+        <div class="flex gap-2">
+          <button id="closeQr" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">Close</button>
+          <a id="openLink" target="_blank" rel="noopener" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Open</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script>
+    // Simple hash router
+    function showView(path) {
+      document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
+      const id = (path === '/' || path === '') ? 'home' : path.replace('/','');
+      const view = document.getElementById(id);
+      if (view) view.classList.remove('hidden');
+    }
+
+    function updateActiveNav() {
+      const current = location.hash || '#/';
+      document.querySelectorAll('.nav-link').forEach(a => {
+        if (a.getAttribute('href') === current) {
+          a.classList.add('text-indigo-600','font-medium');
+        } else {
+          a.classList.remove('text-indigo-600','font-medium');
+        }
+      });
+    }
+
+    function handleHash() {
+      const hash = location.hash.replace('#','');
+      showView(hash.startsWith('/') ? hash.slice(1) : (hash || '/'));
+      updateActiveNav();
+    }
+
+    window.addEventListener('hashchange', handleHash);
+    // initial route
+    handleHash();
+
+    // QR modal logic — uses a public QR image generator API to create a QR for the current page URL.
+    const qrModal = document.getElementById('qrModal');
+    const qrCard = document.getElementById('qrCard');
+    const qrImage = document.getElementById('qrImage');
+    const pageUrlEl = document.getElementById('pageUrl');
+    const openLink = document.getElementById('openLink');
+    const showQrBtn = document.getElementById('showQrBtn');
+    const closeQr = document.getElementById('closeQr');
+    const copyUrl = document.getElementById('copyUrl');
+    const downloadQr = document.getElementById('downloadQr');
+    const qrBackdrop = document.getElementById('qrBackdrop');
+
+    function updateQr() {
+      const url = location.href;
+      pageUrlEl.textContent = url;
+      // Use qrserver public API to generate a QR code image for the current URL.
+      const src = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(url);
+      qrImage.src = src;
+      openLink.href = url;
+      downloadQr.href = src;
+    }
+
+    function openQrModal() {
+      updateQr();
+      qrModal.classList.remove('hidden');
+      // celebrate with a burst of confetti
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 80, spread: 140, origin: { x: 0.5, y: 0.2 }, scalar: 0.9 });
+      }
+      // animate open (scale & fade)
+      qrCard.classList.remove('scale-100','opacity-100');
+      qrCard.classList.add('scale-95','opacity-0');
+      setTimeout(() => {
+        qrCard.classList.remove('scale-95','opacity-0');
+        qrCard.classList.add('scale-100','opacity-100');
+      }, 10);
+    }
+
+    function closeQrModal() {
+      qrCard.classList.remove('scale-100','opacity-100');
+      qrCard.classList.add('scale-95','opacity-0');
+      setTimeout(() => {
+        qrModal.classList.add('hidden');
+      }, 220);
+    }
+
+    showQrBtn.addEventListener('click', openQrModal);
+    closeQr.addEventListener('click', closeQrModal);
+    qrBackdrop.addEventListener('click', closeQrModal);
+
+    copyUrl.addEventListener('click', async () => {
+      const text = location.href;
+      try {
+        await navigator.clipboard.writeText(text);
+        const old = copyUrl.textContent;
+        copyUrl.textContent = 'Copied!';
+        setTimeout(()=> copyUrl.textContent = old, 2000);
+      } catch (e) {
+        copyUrl.textContent = 'Failed';
+        setTimeout(()=> copyUrl.textContent = 'Copy URL', 2000);
+      }
+    });
+
+    // subtle background confetti loop
+    let _confettiInterval = null;
+    function _launchSubtleConfetti() {
+      if (typeof confetti !== 'function') return;
+      confetti({ particleCount: 12, spread: 50, origin: { x: Math.random(), y: Math.random() * 0.3 }, scalar: 0.7, ticks: 250 });
+    }
+    function startConfettiLoop() {
+      if (_confettiInterval) return;
+      _confettiInterval = setInterval(_launchSubtleConfetti, 1500 + Math.floor(Math.random() * 1000));
+    }
+    function stopConfettiLoop() {
+      if (!_confettiInterval) return;
+      clearInterval(_confettiInterval);
+      _confettiInterval = null;
+    }
+    // Start subtle confetti on load; it complements the page without being intrusive.
+    window.addEventListener('load', startConfettiLoop);
+
+    // Ensure QR updates when route changes (so it points to the current route)
+    window.addEventListener('hashchange', () => { if (!qrModal.classList.contains('hidden')) updateQr(); });
+  </script>
 </body>
 </html>
