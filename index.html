@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -33,15 +34,36 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
   <style>
+    * {
+      font-family: "Google Sans Flex", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+        sans-serif !important;
+    }
+
     /* Small style for QR modal backdrop & custom helpers */
-    .backdrop { background: rgba(0,0,0,0.6); }
-    .fade { transition: opacity .25s ease, transform .25s ease; }
-    .hero-pattern { background-image: radial-gradient(circle at 10% 20%, rgba(99,102,241,0.06), transparent 10%), radial-gradient(circle at 80% 80%, rgba(99,102,241,0.04), transparent 8%); }
-    .card-glass { background: rgba(255,255,255,0.7); backdrop-filter: blur(6px); }
+    .backdrop {
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    .fade {
+      transition: opacity .25s ease, transform .25s ease;
+    }
+
+    .hero-pattern {
+      background-image: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.06), transparent 10%), radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.04), transparent 8%);
+    }
+
+    .card-glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(6px);
+    }
   </style>
 </head>
+
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
   <header class="bg-white/60 backdrop-blur-sm shadow-sm">
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -58,14 +80,21 @@
       <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
         <div class="text-center md:text-left">
           <h2 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
-            <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">Happy Birthday, Merlyn</span>
+            <span
+              class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">Happy
+              Birthday Tita Merlyn</span>
           </h2>
-          <p class="text-gray-600 mb-6 max-w-xl">A compact, responsive single-page application demo with polished UI elements, subtle animations, and a shareable QR code.</p>
+          <p class="text-gray-600 mb-6">Built by Charlemagne</p>
           <div class="flex items-center gap-3 justify-center md:justify-start">
-            <button onclick="openQrModal()" class="px-5 py-3 bg-emerald-500 text-white rounded-lg shadow-lg hover:bg-emerald-600 transition">Get Started</button>
-            <button id="cameraBtn" class="px-4 py-3 bg-yellow-500 text-white rounded-lg shadow hover:bg-yellow-600 transition">Camera</button>
-            <button id="uploadBtn" class="px-4 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Upload</button>
-            <button id="showQrBtn" class="px-4 py-3 bg-white card-glass rounded-lg shadow hover:shadow-md transition">Show QR</button>
+            <button id="cameraBtn"
+              class="px-4 py-3 bg-yellow-500 text-white rounded-lg shadow hover:bg-yellow-600 transition">Camera</button>
+            <button id="uploadBtn"
+              class="px-4 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Upload</button>
+            <button id="createFolderBtn"
+              class="px-4 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">Create
+              Folder</button>
+            <button id="showQrBtn"
+              class="px-4 py-3 bg-white card-glass rounded-lg shadow hover:shadow-md transition">Show QR</button>
           </div>
           <div class="mt-6 text-sm text-gray-500">Responsive • No build step • Uses public QR generator</div>
         </div>
@@ -73,7 +102,9 @@
           <div class="w-72 h-72 rounded-xl shadow-2xl hero-pattern flex items-center justify-center animate-float">
             <!-- Simple decorative SVG -->
             <svg width="160" height="160" viewBox="0 0 24 24" fill="none" class="text-white opacity-90">
-              <path d="M12 2c1.657 0 3 1.343 3 3 0 .85-.337 1.62-.88 2.165l3.46 3.46a1 1 0 010 1.415L15.83 16.83a1 1 0 01-1.414 0l-3.46-3.46A3 3 0 0112 14c-1.657 0-3-1.343-3-3 0-.85.337-1.62.88-2.165L6.42 5.375A1 1 0 017.83 3.96L11.29 7.42A3 3 0 0112 5c0-1.657 1.343-3 3-3z" fill="currentColor"/>
+              <path
+                d="M12 2c1.657 0 3 1.343 3 3 0 .85-.337 1.62-.88 2.165l3.46 3.46a1 1 0 010 1.415L15.83 16.83a1 1 0 01-1.414 0l-3.46-3.46A3 3 0 0112 14c-1.657 0-3-1.343-3-3 0-.85.337-1.62.88-2.165L6.42 5.375A1 1 0 017.83 3.96L11.29 7.42A3 3 0 0112 5c0-1.657 1.343-3 3-3z"
+                fill="currentColor" />
             </svg>
           </div>
         </div>
@@ -85,18 +116,21 @@
     <div id="uploadArea" class="mt-8 max-w-2xl mx-auto hidden">
       <div class="p-4 bg-white rounded-lg shadow flex items-center justify-between">
         <div class="flex items-center gap-4">
-          <div id="filePreview" class="w-20 h-20 bg-gray-100 rounded flex items-center justify-center overflow-hidden"></div>
+          <div id="filePreview" class="w-20 h-20 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+          </div>
           <div>
             <div id="fileName" class="font-medium">No file</div>
             <div id="fileSize" class="text-sm text-gray-500"></div>
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <a id="downloadUploaded" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 hidden" download>Download</a>
+          <a id="downloadUploaded" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 hidden"
+            download>Download</a>
           <button id="clearUpload" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">Clear</button>
         </div>
       </div>
-      <pre id="textPreview" class="mt-4 bg-white p-4 rounded-md text-sm text-gray-700 hidden max-h-48 overflow-auto"></pre>
+      <pre id="textPreview"
+        class="mt-4 bg-white p-4 rounded-md text-sm text-gray-700 hidden max-h-48 overflow-auto"></pre>
     </div>
 
     <!-- Gallery -->
@@ -142,9 +176,11 @@
   </footer>
 
   <!-- QR Modal -->
-  <div id="qrModal" class="fixed inset-0 hidden items-center justify-center z-50">
+  <div id="qrModal" class="flex fixed inset-0 hidden items-center justify-center z-50">
     <div class="absolute inset-0 backdrop" id="qrBackdrop"></div>
-    <div class="relative bg-white rounded-2xl p-6 shadow-2xl z-10 w-96 mx-4 transform transition duration-200 scale-95 opacity-0" id="qrCard">
+    <div
+      class="relative bg-white rounded-2xl p-6 shadow-2xl z-10 w-96 mx-4 transform transition duration-200 scale-95 opacity-0"
+      id="qrCard">
       <h3 class="text-xl font-semibold mb-4">Share this page</h3>
       <div class="flex items-center justify-center mb-4">
         <img id="qrImage" alt="QR code" class="w-56 h-56 bg-gray-100 rounded-lg shadow" />
@@ -153,392 +189,52 @@
       <div class="flex gap-3 justify-between">
         <div class="flex gap-2">
           <button id="copyUrl" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition">Copy URL</button>
-          <a id="downloadQr" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition" download="merlyn-qr.png">Download</a>
+          <a id="downloadQr" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition"
+            download="merlyn-qr.png">Download</a>
         </div>
         <div class="flex gap-2">
           <button id="closeQr" class="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200">Close</button>
-          <a id="openLink" target="_blank" rel="noopener" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Open</a>
+          <a id="openLink" target="_blank" rel="noopener"
+            class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Open</a>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Create Folder Modal -->
+  <div id="createFolderModal" class="fixed inset-0 hidden items-center justify-center z-50">
+    <div class="absolute inset-0 backdrop" id="folderBackdrop"></div>
+    <div
+      class="relative bg-white rounded-2xl p-8 shadow-2xl z-10 w-96 mx-4 transform transition duration-200 scale-95 opacity-0"
+      id="folderCard">
+      <h3 class="text-2xl font-semibold mb-6">Create New Folder</h3>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Folder Name</label>
+          <input id="folderNameInput" type="text" placeholder="e.g., Birthday Photos"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Owner Name</label>
+          <input id="ownerNameInput" type="text" placeholder="e.g., Merlyn"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition">
+        </div>
+      </div>
+
+      <div class="mt-8 flex gap-3 justify-end">
+        <button id="cancelFolderBtn"
+          class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium">Cancel</button>
+        <button id="confirmFolderBtn"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">Create
+          Folder</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-  <script>
-    // Simple hash router
-    function showView(path) {
-      document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
-      const id = (path === '/' || path === '') ? 'home' : path.replace('/','');
-      const view = document.getElementById(id);
-      if (view) view.classList.remove('hidden');
-    }
-
-    function updateActiveNav() {
-      const current = location.hash || '#/';
-      document.querySelectorAll('.nav-link').forEach(a => {
-        if (a.getAttribute('href') === current) {
-          a.classList.add('text-indigo-600','font-medium');
-        } else {
-          a.classList.remove('text-indigo-600','font-medium');
-        }
-      });
-    }
-
-    function handleHash() {
-      const hash = location.hash.replace('#','');
-      showView(hash.startsWith('/') ? hash.slice(1) : (hash || '/'));
-      updateActiveNav();
-    }
-
-    window.addEventListener('hashchange', handleHash);
-    // initial route
-    handleHash();
-
-    // QR modal logic — uses a public QR image generator API to create a QR for the current page URL.
-    const qrModal = document.getElementById('qrModal');
-    const qrCard = document.getElementById('qrCard');
-    const qrImage = document.getElementById('qrImage');
-    const pageUrlEl = document.getElementById('pageUrl');
-    const openLink = document.getElementById('openLink');
-    const showQrBtn = document.getElementById('showQrBtn');
-    const closeQr = document.getElementById('closeQr');
-    const copyUrl = document.getElementById('copyUrl');
-    const downloadQr = document.getElementById('downloadQr');
-    const qrBackdrop = document.getElementById('qrBackdrop');
-
-    function updateQr() {
-      const url = location.href;
-      pageUrlEl.textContent = url;
-      // Use qrserver public API to generate a QR code image for the current URL.
-      const src = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(url);
-      qrImage.src = src;
-      openLink.href = url;
-      downloadQr.href = src;
-    }
-
-    function openQrModal() {
-      updateQr();
-      qrModal.classList.remove('hidden');
-      // celebrate with a burst of confetti
-      if (typeof confetti === 'function') {
-        confetti({ particleCount: 80, spread: 140, origin: { x: 0.5, y: 0.2 }, scalar: 0.9 });
-      }
-      // animate open (scale & fade)
-      qrCard.classList.remove('scale-100','opacity-100');
-      qrCard.classList.add('scale-95','opacity-0');
-      setTimeout(() => {
-        qrCard.classList.remove('scale-95','opacity-0');
-        qrCard.classList.add('scale-100','opacity-100');
-      }, 10);
-    }
-
-    function closeQrModal() {
-      qrCard.classList.remove('scale-100','opacity-100');
-      qrCard.classList.add('scale-95','opacity-0');
-      setTimeout(() => {
-        qrModal.classList.add('hidden');
-      }, 220);
-    }
-
-    showQrBtn.addEventListener('click', openQrModal);
-    closeQr.addEventListener('click', closeQrModal);
-    qrBackdrop.addEventListener('click', closeQrModal);
-
-    copyUrl.addEventListener('click', async () => {
-      const text = location.href;
-      try {
-        await navigator.clipboard.writeText(text);
-        const old = copyUrl.textContent;
-        copyUrl.textContent = 'Copied!';
-        setTimeout(()=> copyUrl.textContent = old, 2000);
-      } catch (e) {
-        copyUrl.textContent = 'Failed';
-        setTimeout(()=> copyUrl.textContent = 'Copy URL', 2000);
-      }
-    });
-
-    // subtle background confetti loop
-    let _confettiInterval = null;
-    function _launchSubtleConfetti() {
-      if (typeof confetti !== 'function') return;
-      confetti({ particleCount: 12, spread: 50, origin: { x: Math.random(), y: Math.random() * 0.3 }, scalar: 0.7, ticks: 250 });
-    }
-    function startConfettiLoop() {
-      if (_confettiInterval) return;
-      _confettiInterval = setInterval(_launchSubtleConfetti, 1500 + Math.floor(Math.random() * 1000));
-    }
-    function stopConfettiLoop() {
-      if (!_confettiInterval) return;
-      clearInterval(_confettiInterval);
-      _confettiInterval = null;
-    }
-    // Start subtle confetti on load; it complements the page without being intrusive.
-    window.addEventListener('load', () => { startConfettiLoop(); loadGalleryFromStorage(); });
-
-    // Gallery storage & UI helpers
-    const galleryKey = 'merlynGallery';
-    let gallery = [];
-
-    function saveGallery() {
-      try {
-        localStorage.setItem(galleryKey, JSON.stringify(gallery));
-      } catch (e) {
-        console.warn('Could not save gallery to localStorage', e);
-      }
-    }
-
-    function loadGalleryFromStorage() {
-      const raw = localStorage.getItem(galleryKey);
-      if (!raw) return;
-      try {
-        gallery = JSON.parse(raw) || [];
-        renderGallery();
-      } catch (e) {
-        console.warn('Failed to parse gallery data', e);
-        gallery = [];
-      }
-    }
-
-    function renderGallery() {
-      const container = document.getElementById('gallery');
-      container.innerHTML = '';
-      gallery.forEach((item, i) => {
-        const card = document.createElement('div');
-        card.className = 'relative rounded-lg overflow-hidden shadow hover:shadow-md bg-white';
-        card.innerHTML = `
-          <img src="${item.dataUrl}" alt="${item.name}" class="w-full h-36 object-cover cursor-pointer" data-index="${i}" />
-          <div class="p-2 flex items-center justify-between text-sm">
-            <div class="truncate">${item.name}</div>
-            <div class="flex gap-2">
-              <a href="${item.dataUrl}" download="${item.name}" class="px-2 py-1 bg-indigo-600 text-white rounded">DL</a>
-              <button data-delete="${i}" class="px-2 py-1 bg-gray-100 rounded">Del</button>
-            </div>
-          </div>`;
-        container.appendChild(card);
-      });
-      // attach handlers
-      container.querySelectorAll('img[data-index]').forEach(img => img.addEventListener('click', (e) => {
-        const idx = Number(e.currentTarget.dataset.index);
-        openGalleryModal(gallery[idx]);
-      }));
-      container.querySelectorAll('button[data-delete]').forEach(btn => btn.addEventListener('click', (e) => {
-        const idx = Number(e.currentTarget.getAttribute('data-delete'));
-        if (confirm('Delete this image from gallery?')) deleteGalleryItem(idx);
-      }));
-    }
-
-    function deleteGalleryItem(index) {
-      if (index < 0 || index >= gallery.length) return;
-      gallery.splice(index, 1);
-      saveGallery();
-      renderGallery();
-    }
-
-    function addImageToGalleryFromFile(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const dataUrl = reader.result;
-          const item = { name: file.name, dataUrl, size: file.size };
-          gallery.unshift(item);
-          saveGallery();
-          renderGallery();
-          resolve(item);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    // Gallery modal handlers
-    const galleryModal = document.getElementById('galleryModal');
-    const galleryBackdrop = document.getElementById('galleryBackdrop');
-    const galleryModalImage = document.getElementById('galleryModalImage');
-    const galleryDownload = document.getElementById('galleryDownload');
-    const galleryClose = document.getElementById('galleryClose');
-
-    function openGalleryModal(item) {
-      if (!item) return;
-      galleryModalImage.src = item.dataUrl;
-      galleryDownload.href = item.dataUrl;
-      galleryDownload.download = item.name;
-      galleryModal.classList.remove('hidden');
-      galleryModal.classList.add('flex');
-    }
-
-    function closeGalleryModal() {
-      galleryModal.classList.add('hidden');
-      galleryModal.classList.remove('flex');
-      galleryModalImage.src = '';
-    }
-
-    galleryBackdrop.addEventListener('click', closeGalleryModal);
-    galleryClose.addEventListener('click', closeGalleryModal);
-
-    // Camera handlers
-    const cameraBtn = document.getElementById('cameraBtn');
-    const cameraModal = document.getElementById('cameraModal');
-    const cameraBackdrop = document.getElementById('cameraBackdrop');
-    const cameraVideo = document.getElementById('cameraVideo');
-    const cameraCapture = document.getElementById('cameraCapture');
-    const cameraClose = document.getElementById('cameraClose');
-    const cameraFlip = document.getElementById('cameraFlip');
-    let cameraStream = null;
-    let cameraFacing = 'environment';
-
-    async function startCamera() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('Camera not supported in this browser.');
-        return;
-      }
-      try {
-        const constraints = { video: { facingMode: cameraFacing } };
-        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-        cameraVideo.srcObject = cameraStream;
-        await cameraVideo.play();
-      } catch (e) {
-        console.error('Camera error', e);
-        alert('Could not start camera: ' + (e.message || e));
-      }
-    }
-
-    function stopCamera() {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(t => t.stop());
-        cameraStream = null;
-      }
-      if (cameraVideo) cameraVideo.srcObject = null;
-    }
-
-    function openCameraModal() {
-      if (!cameraModal) return;
-      cameraModal.classList.remove('hidden');
-      cameraModal.classList.add('flex');
-      startCamera();
-    }
-
-    function closeCameraModal() {
-      stopCamera();
-      if (!cameraModal) return;
-      cameraModal.classList.add('hidden');
-      cameraModal.classList.remove('flex');
-    }
-
-    if (cameraBtn) cameraBtn.addEventListener('click', openCameraModal);
-    if (cameraClose) cameraClose.addEventListener('click', closeCameraModal);
-    if (cameraBackdrop) cameraBackdrop.addEventListener('click', closeCameraModal);
-
-    if (cameraCapture) cameraCapture.addEventListener('click', async () => {
-      if (!cameraVideo) return;
-      const canvas = document.createElement('canvas');
-      canvas.width = cameraVideo.videoWidth || 1280;
-      canvas.height = cameraVideo.videoHeight || 720;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/png');
-      try {
-        await addImageToGalleryFromDataUrl(dataUrl, `photo-${Date.now()}.png`);
-        if (typeof confetti === 'function') confetti({ particleCount: 40, spread: 120, origin: { x: 0.5, y: 0.3 } });
-      } catch (e) {
-        console.warn('Failed to add camera image', e);
-      }
-      closeCameraModal();
-    });
-
-    if (cameraFlip) cameraFlip.addEventListener('click', () => {
-      cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment';
-      if (cameraStream) { stopCamera(); startCamera(); }
-    });
-
-    // helper to add dataUrl
-    function addImageToGalleryFromDataUrl(dataUrl, name) {
-      const item = { name: name || `photo-${Date.now()}.png`, dataUrl, size: dataUrl.length };
-      gallery.unshift(item);
-      saveGallery();
-      renderGallery();
-      return Promise.resolve(item);
-    }
-
-    // Upload & Download handlers
-    const fileInput = document.getElementById('fileInput');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const uploadArea = document.getElementById('uploadArea');
-    const filePreview = document.getElementById('filePreview');
-    const fileNameEl = document.getElementById('fileName');
-    const fileSizeEl = document.getElementById('fileSize');
-    const downloadUploaded = document.getElementById('downloadUploaded');
-    const clearUpload = document.getElementById('clearUpload');
-    const textPreview = document.getElementById('textPreview');
-    let uploadedObjectUrl = null;
-    let uploadedFile = null;
-
-    if (uploadBtn) {
-      uploadBtn.addEventListener('click', () => { if (fileInput) fileInput.click(); });
-    } else {
-      // Fallback: delegate clicks to document in case element isn't available at script time
-      document.addEventListener('click', (e) => { if (e.target && e.target.id === 'uploadBtn' && fileInput) fileInput.click(); });
-    }
-    if (fileInput) {
-      fileInput.addEventListener('change', handleFile);
-    } else {
-      console.warn('fileInput element not found');
-    }
-
-    async function handleFile(e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      uploadedFile = file;
-      uploadArea.classList.remove('hidden');
-      fileNameEl.textContent = file.name;
-      fileSizeEl.textContent = `${(file.size/1024).toFixed(1)} KB`;
-      if (uploadedObjectUrl) { URL.revokeObjectURL(uploadedObjectUrl); uploadedObjectUrl = null; }
-      if (file.type.startsWith('image/')) {
-        uploadedObjectUrl = URL.createObjectURL(file);
-        filePreview.innerHTML = `<img src="${uploadedObjectUrl}" alt="${file.name}" class="w-full h-full object-cover">`;
-        downloadUploaded.href = uploadedObjectUrl; downloadUploaded.classList.remove('hidden');
-        textPreview.classList.add('hidden');
-        // add to gallery (persisted)
-        try {
-          await addImageToGalleryFromFile(file);
-          fileNameEl.textContent = file.name + ' · added to gallery';
-        } catch (e) {
-          console.warn('Failed to add to gallery', e);
-        }
-      } else if (file.type.startsWith('text/') || file.name.endsWith('.json') || file.name.endsWith('.md')) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const text = reader.result;
-          textPreview.textContent = text;
-          textPreview.classList.remove('hidden');
-          filePreview.innerHTML = '<div class="text-sm text-gray-500 px-2">Text file</div>';
-          const blobUrl = URL.createObjectURL(new Blob([text], {type: file.type || 'text/plain'}));
-          if (uploadedObjectUrl) URL.revokeObjectURL(uploadedObjectUrl);
-          uploadedObjectUrl = blobUrl;
-          downloadUploaded.href = uploadedObjectUrl;
-          downloadUploaded.classList.remove('hidden');
-        };
-        reader.readAsText(file);
-      } else {
-        uploadedObjectUrl = URL.createObjectURL(file);
-        filePreview.innerHTML = `<div class="text-sm text-gray-500 px-2">${file.type || 'file'}</div>`;
-        downloadUploaded.href = uploadedObjectUrl; downloadUploaded.classList.remove('hidden');
-        textPreview.classList.add('hidden');
-      }
-    }
-
-    clearUpload.addEventListener('click', () => {
-      uploadArea.classList.add('hidden');
-      fileInput.value = '';
-      if (uploadedObjectUrl) URL.revokeObjectURL(uploadedObjectUrl);
-      uploadedObjectUrl = null;
-      uploadedFile = null;
-      filePreview.innerHTML = '';
-      textPreview.textContent = '';
-      downloadUploaded.classList.add('hidden');
-    });
-
-    // Ensure QR updates when route changes (so it points to the current route)
-    window.addEventListener('hashchange', () => { if (!qrModal.classList.contains('hidden')) updateQr(); });
-  </script>
+  <script src="js/index.js"></script>
 </body>
+
 </html>
