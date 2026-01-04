@@ -36,6 +36,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap"
     rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase.js"></script>
   <style>
@@ -61,13 +62,61 @@
       background: rgba(255, 255, 255, 0.7);
       backdrop-filter: blur(6px);
     }
+
+    /* Typography improvements */
+    .fancy-title {
+      font-family: 'Poppins', "Google Sans Flex", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-shadow: 0 8px 24px rgba(99,102,241,0.08);
+    }
+
+    .heading-gradient {
+      background: linear-gradient(90deg,#7c3aed,#06b6d4);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      font-size: 1.125rem;
+      line-height: 1.6;
+    }
+
+    .btn {
+      padding: .6rem 1.1rem;
+      border-radius: .75rem;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+
+    .btn:focus {
+      outline: none;
+      box-shadow: 0 12px 36px rgba(99,102,241,0.12);
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+    }
+
+    .gallery-title {
+      letter-spacing: 0.02em;
+      color: #374151;
+      font-weight: 700;
+    }
+
+    .muted {
+      color: #6b7280;
+    }
   </style>
 </head>
 
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
   <header class="bg-white/60 backdrop-blur-sm shadow-sm">
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-      <h1 class="text-xl font-semibold">Happy Birthday tita Merlyn!</h1>
+      <h1 class="text-xl md:text-2xl fancy-title text-purple-600" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">Happy Birthday, Tita Merlyn!</h1>
       <nav class="space-x-4">
         <a href="#/" class="nav-link text-sm text-gray-600 hover:text-gray-900 px-2 py-1 rounded transition">Home</a>
       </nav>
@@ -79,24 +128,17 @@
     <section id="home" class="view">
       <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
         <div class="text-center md:text-left">
-          <h2 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4">
-            <span
-              class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">Happy
-              Birthday Tita Merlyn</span>
+          <h2 class="text-4xl md:text-5xl leading-tight mb-4 fancy-title text-purple-600">
+             <span class="italic text-purple-600" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);">Happy Birthday, Tita Merlyn</span>
           </h2>
-          <p class="text-gray-600 mb-6">Built by Charlemagne</p>
+          <p class="subtitle mb-6">Celebrating your special day with love and joy — we're so happy to share it with you.</p>
           <div class="flex items-center gap-3 justify-center md:justify-start">
-            <button id="cameraBtn"
-              class="px-4 py-3 bg-yellow-500 text-white rounded-lg shadow hover:bg-yellow-600 transition">Camera</button>
-            <button id="uploadBtn"
-              class="px-4 py-3 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Upload</button>
-            <button id="createFolderBtn"
-              class="px-4 py-3 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">Create
-              Folder</button>
-            <button id="showQrBtn"
-              class="px-4 py-3 bg-white card-glass rounded-lg shadow hover:shadow-md transition">Show QR</button>
+            <button id="cameraBtn" class="btn bg-yellow-500 text-white hover:bg-yellow-600">Camera</button>
+            <button id="uploadBtn" class="btn bg-indigo-600 text-white hover:bg-indigo-700">Upload</button>
+            <button id="createFolderBtn" class="btn bg-green-600 text-white hover:bg-green-700">Create Folder</button>
+            <button id="showQrBtn" class="btn bg-white card-glass hover:shadow-md">Show QR</button>
           </div>
-          <div class="mt-6 text-sm text-gray-500">Responsive • No build step • Uses public QR generator</div>
+          <div class="mt-6 text-sm muted">Tap, upload, and add to the birthday memories.</div>
         </div>
         <div class="relative flex items-center justify-center">
           <div class="w-72 h-72 rounded-xl shadow-2xl hero-pattern flex items-center justify-center animate-float">
@@ -135,7 +177,7 @@
 
     <!-- Gallery -->
     <section id="gallerySection" class="mt-8 max-w-5xl mx-auto">
-      <h3 class="text-lg font-semibold mb-4">Gallery</h3>
+      <h3 class="text-lg font-semibold mb-4 gallery-title">Gallery</h3>
       <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         <!-- Thumbnails inserted here -->
       </div>
@@ -172,7 +214,7 @@
   </main>
 
   <footer class="bg-white border-t py-4">
-    <div class="container mx-auto px-4 text-sm text-gray-500">© 2026 Merlyn — Tailwind SPA demo</div>
+    <div class="container mx-auto px-4 text-sm muted">© 2026 Merlyn — Tailwind SPA demo</div>
   </footer>
 
   <!-- QR Modal -->
