@@ -31,11 +31,33 @@ const closeQr = document.getElementById('closeQr');
 const openLink = document.getElementById('openLink');
 const createFolderModal = document.getElementById('createFolderModal');
 const folderCard = document.getElementById('folderCard');
-const folderNameInput = document.getElementById('folderNameInput');
+const  folderNameInput = document.getElementById('folderNameInput');
 const ownerNameInput = document.getElementById('ownerNameInput');
 const confirmFolderBtn = document.getElementById('confirmFolderBtn');
 const cancelFolderBtn = document.getElementById('cancelFolderBtn');
 const folderBackdrop = document.getElementById('folderBackdrop');
+
+// Toast container and helpers
+const toastContainer = document.getElementById('toastContainer');
+function showToast(message, type = '') {
+    if (!toastContainer) return;
+    const t = document.createElement('div');
+    t.className = 'toast ' + (type || '');
+    t.innerHTML = `<div class="flex-1 text-sm">${message}</div>`;
+    toastContainer.appendChild(t);
+    // allow transition
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => {
+        t.classList.remove('show');
+        setTimeout(() => t.remove(), 220);
+    }, 3200);
+}
+
+function fireConfetti() {
+    if (typeof confetti === 'function') {
+        confetti({ particleCount: 60, spread: 55, origin: { y: 0.6 } });
+    }
+}
 
 let facingMode = 'environment';
 
@@ -52,17 +74,7 @@ async function loadFoldersUI() {
     renderGallery();
 }
 
-// Create new folder
-async function createNewFolder() {
-    const folderName = prompt('Enter folder name:');
-    if (!folderName) return;
-
-    const newFolder = await createFolder(folderName, currentUserName);
-    if (newFolder) {
-        folders.unshift(newFolder);
-        renderGallery();
-    }
-}
+// Prompt-based createNewFolder removed — use modal-based creation instead.
 
 // Load pictures from current folder
 async function loadPicturesUI(folderId) {
@@ -79,12 +91,13 @@ function renderGallery() {
         // Display pictures from folder
         gallery.forEach((picture, index) => {
             const thumb = document.createElement('div');
-            thumb.className = 'relative group cursor-pointer';
+            thumb.className = 'relative group cursor-pointer card-hover';
             thumb.innerHTML = `
-        <img src="${picture.picture_url}" alt="Gallery" class="w-full h-40 object-cover rounded-lg shadow hover:shadow-lg transition">
+        <img src="${picture.picture_url}" loading="lazy" decoding="async" alt="Gallery" class="w-full h-40 object-cover rounded-lg shadow hover:shadow-lg transition transform duration-150 hover:scale-105">
         <button class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition text-xs">Delete</button>
       `;
-            thumb.querySelector('img').addEventListener('click', () => openGalleryModal(picture));
+            const img = thumb.querySelector('img');
+            img.addEventListener('click', () => openGalleryModal(picture));
             thumb.querySelector('button').addEventListener('click', (e) => {
                 e.stopPropagation();
                 deletePictureUI(picture.id);
@@ -95,13 +108,13 @@ function renderGallery() {
         // Display folders
         folders.forEach((folder) => {
             const folderEl = document.createElement('div');
-            folderEl.className = 'p-4 bg-white rounded-lg shadow hover:shadow-md transition cursor-pointer';
+            folderEl.className = 'p-4 bg-white rounded-lg shadow transition cursor-pointer card-hover';
             folderEl.innerHTML = `
         <div class="flex items-center gap-3">
           <div class="text-3xl">📁</div>
           <div class="flex-1">
             <div class="font-semibold">${folder.name}</div>
-            <div class="text-sm text-gray-500">Click to open</div>
+            <div class="text-sm muted">Click to open</div>
           </div>
           <button class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600">Delete</button>
         </div>
@@ -116,12 +129,12 @@ function renderGallery() {
 
         // Add new folder button
         const addBtn = document.createElement('div');
-        addBtn.className = 'p-4 bg-indigo-100 rounded-lg shadow hover:shadow-md transition cursor-pointer border-2 border-dashed border-indigo-300';
+        addBtn.className = 'p-4 bg-indigo-100 rounded-lg shadow transition cursor-pointer card-hover border-2 border-dashed border-indigo-300';
         addBtn.innerHTML = '<div class="text-center text-2xl">➕ New Folder</div>';
         addBtn.addEventListener('click', createNewFolder);
         galleryContainer.appendChild(addBtn);
     }
-}
+} 
 
 // Create Folder Button - Open Modal
 createFolderBtn.addEventListener('click', () => {
@@ -160,6 +173,8 @@ confirmFolderBtn.addEventListener('click', async () => {
         folders.unshift(newFolder);
         closeFolderModal();
         renderGallery();
+        fireConfetti();
+        showToast('Folder created 🎉', 'success');
     } else {
         alert('Failed to create folder. Try again.');
     }
@@ -234,9 +249,12 @@ cameraBtn.addEventListener('click', async () => {
 cameraFlip.addEventListener('click', () => {
     facingMode = facingMode === 'environment' ? 'user' : 'environment';
     const stream = cameraVideo.srcObject;
-    stream.getTracks().forEach(track => track.stop());
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
     navigator.mediaDevices.getUserMedia({ video: { facingMode } })
-        .then(newStream => { cameraVideo.srcObject = newStream; });
+        .then(newStream => { cameraVideo.srcObject = newStream; })
+        .catch((e) => { console.error('Failed to switch camera', e); });
 });
 
 cameraCapture.addEventListener('click', async () => {
@@ -255,18 +273,25 @@ cameraCapture.addEventListener('click', async () => {
         if (pictureUrl) {
             await addPictureToFolder(currentFolderId, pictureUrl);
             await loadPicturesUI(currentFolderId);
+            // Celebration + feedback
+            fireConfetti();
+            showToast('Photo added 🎉', 'success');
         }
     }
 
     cameraModal.classList.add('hidden');
     cameraModal.classList.remove('flex');
-    cameraVideo.srcObject.getTracks().forEach(track => track.stop());
+    if (cameraVideo.srcObject) {
+        cameraVideo.srcObject.getTracks().forEach(track => track.stop());
+    }
 });
 
 cameraClose.addEventListener('click', () => {
     cameraModal.classList.add('hidden');
     cameraModal.classList.remove('flex');
-    cameraVideo.srcObject.getTracks().forEach(track => track.stop());
+    if (cameraVideo.srcObject) {
+        cameraVideo.srcObject.getTracks().forEach(track => track.stop());
+    }
 });
 
 // File upload
@@ -283,6 +308,9 @@ fileInput.addEventListener('change', async (e) => {
     if (pictureUrl) {
         await addPictureToFolder(currentFolderId, pictureUrl);
         await loadPicturesUI(currentFolderId);
+        // Celebration + feedback
+        fireConfetti();
+        showToast('Upload successful 🎉', 'success');
     }
     fileInput.value = '';
 });
@@ -323,8 +351,7 @@ showQrBtn.addEventListener('click', async () => {
 
 copyUrl.addEventListener('click', () => {
     navigator.clipboard.writeText(window.location.href);
-    copyUrl.textContent = 'Copied!';
-    setTimeout(() => { copyUrl.textContent = 'Copy URL'; }, 2000);
+    showToast('Page URL copied', 'success');
 });
 
 openLink.addEventListener('click', () => {
