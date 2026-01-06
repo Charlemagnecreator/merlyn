@@ -187,20 +187,15 @@
           <div class="mt-6 text-sm muted">Tap, upload, and add to the birthday memories.</div>
         </div>
         <div class="relative flex items-center justify-center">
-          <div class="w-72 h-72 rounded-xl shadow-2xl hero-pattern flex items-center justify-center animate-float">
-            <!-- Simple decorative SVG -->
-            <svg width="160" height="160" viewBox="0 0 24 24" fill="none" class="text-white opacity-90">
-              <path
-                d="M12 2c1.657 0 3 1.343 3 3 0 .85-.337 1.62-.88 2.165l3.46 3.46a1 1 0 010 1.415L15.83 16.83a1 1 0 01-1.414 0l-3.46-3.46A3 3 0 0112 14c-1.657 0-3-1.343-3-3 0-.85.337-1.62.88-2.165L6.42 5.375A1 1 0 017.83 3.96L11.29 7.42A3 3 0 0112 5c0-1.657 1.343-3 3-3z"
-                fill="currentColor" />
-            </svg>
+          <div class="w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 rounded-xl shadow-2xl hero-pattern flex items-center justify-center animate-float overflow-hidden p-2">
+            <img src="pictures/5b983832-ad2c-498a-8a03-ad2177ec80ac.jfif" alt="Birthday photo" class="max-w-full max-h-full object-contain m-auto rounded-lg" loading="lazy" />
           </div>
         </div>
       </div>
     </section>
 
     <!-- Upload area -->
-    <input type="file" id="fileInput" class="hidden" accept="image/*,text/*" capture="environment" />
+    <input type="file" id="fileInput" class="hidden" accept="image/*,text/*" capture="environment" multiple />
     <div id="uploadArea" class="mt-8 max-w-2xl mx-auto hidden">
       <div class="p-4 bg-white rounded-lg shadow flex items-center justify-between">
         <div class="flex items-center gap-4">

@@ -298,20 +298,47 @@ cameraClose.addEventListener('click', () => {
 uploadBtn.addEventListener('click', () => fileInput.click());
 
 fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file || !currentFolderId) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !currentFolderId) {
         alert('Please open a folder first');
+        fileInput.value = '';
         return;
     }
 
-    const pictureUrl = await uploadPictureFile(currentFolderId, file);
-    if (pictureUrl) {
-        await addPictureToFolder(currentFolderId, pictureUrl);
-        await loadPicturesUI(currentFolderId);
-        // Celebration + feedback
-        fireConfetti();
-        showToast('Upload successful 🎉', 'success');
+    // Show upload area with basic preview
+    uploadArea.classList.remove('hidden');
+    const filePreviewEl = document.getElementById('filePreview');
+    filePreviewEl.innerHTML = '';
+    document.getElementById('fileName').textContent = `${files.length} file${files.length > 1 ? 's' : ''} selected`;
+    document.getElementById('fileSize').textContent = '';
+
+    let successCount = 0;
+    for (const file of files) {
+        const pictureUrl = await uploadPictureFile(currentFolderId, file);
+        if (pictureUrl) {
+            await addPictureToFolder(currentFolderId, pictureUrl);
+            successCount++;
+
+            // Add thumbnail to preview
+            const thumbImg = document.createElement('img');
+            thumbImg.src = pictureUrl;
+            thumbImg.className = 'w-full h-full object-cover';
+            thumbImg.loading = 'lazy';
+            thumbImg.decoding = 'async';
+
+            const thumbWrap = document.createElement('div');
+            thumbWrap.className = 'w-20 h-20 rounded overflow-hidden mr-2';
+            thumbWrap.appendChild(thumbImg);
+            filePreviewEl.appendChild(thumbWrap);
+        }
     }
+
+    if (successCount > 0) {
+        await loadPicturesUI(currentFolderId);
+        fireConfetti();
+        showToast(`Uploaded ${successCount} file${successCount > 1 ? 's' : ''} 🎉`, 'success');
+    }
+
     fileInput.value = '';
 });
 
