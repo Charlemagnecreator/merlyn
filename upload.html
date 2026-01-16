@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload to Birthday Memories</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <style>
+        * {
+            font-family: "Inter Tight", sans-serif !important;
+        }
+
+        .font-playfair {
+            font-family: 'Playfair Display', serif !important;
+        }
+
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .drop-zone.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-purple-600">Upload Birthday Memories</h1>
+
+        <!-- Create Folder Section -->
+        <div id="createFolderSection" class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Create a New Folder</h2>
+            <form id="createFolderForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="folderName" class="block text-sm font-medium text-gray-700 mb-2">Folder Name</label>
+                        <input type="text" id="folderName" name="folderName" placeholder="e.g., Birthday Photos"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            required>
+                    </div>
+                    <div>
+                        <label for="userName" class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                        <input type="text" id="userName" name="userName" placeholder="e.g., Merlyn"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            required>
+                    </div>
+                </div>
+                <button type="submit"
+                    class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition">Create
+                    Folder</button>
+            </form>
+        </div>
+
+        <!-- Your Folders Section -->
+        <div id="foldersSection" class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Your Folders</h2>
+            <div id="foldersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <!-- Folders will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="bg-white p-6 rounded-lg shadow-md hidden">
+            <h2 class="text-xl font-semibold mb-4">Upload to <span id="selectedFolderName"></span></h2>
+            <div id="existingImages" class="mb-4">
+                <h3 class="text-lg font-medium mb-2">Existing Images</h3>
+                <div id="gallery" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+            </div>
+            <div id="dropZone" class="drop-zone cursor-pointer">
+                <p class="text-gray-600">Drag and drop images here or click to select</p>
+                <input type="file" id="fileInput" multiple accept="image/*" class="hidden">
+            </div>
+            <div id="fileList" class="mt-4 space-y-2"></div>
+            <button id="uploadBtn"
+                class="mt-4 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition disabled:opacity-50"
+                disabled>Upload Files</button>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="fixed bottom-4 right-4 space-y-2"></div>
+    </div>
+
+    <script>
+        let selectedFolderId = null;
+
+        // Load folders on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAndDisplayFolders();
+        });
+
+        // Create folder form submission
+        document.getElementById('createFolderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const folderName = document.getElementById('folderName').value;
+            const userName = document.getElementById('userName').value;
+            const folder = await createFolder(folderName, userName);
+            if (folder) {
+                showToast('Folder created successfully!', 'success');
+                document.getElementById('createFolderForm').reset();
+                await loadAndDisplayFolders();
+            } else {
+                showToast('Failed to create folder.', 'error');
+            }
+        });
+
+        // Load and display folders
+        async function loadAndDisplayFolders() {
+            const folders = await loadFolders(); // Get all folders
+            const foldersGrid = document.getElementById('foldersGrid');
+            foldersGrid.innerHTML = '';
+            if (folders.length === 0) {
+                foldersGrid.innerHTML = '<p class="text-gray-500">No folders yet. Create one above!</p>';
+                return;
+            }
+            folders.forEach(folder => {
+                const folderCard = document.createElement('div');
+                folderCard.className = 'p-4 rounded-lg cursor-pointer text-center folder-card';
+                folderCard.style.backgroundImage = 'url(pictures/folder-1485.svg)';
+                folderCard.style.backgroundSize = 'contain';
+                folderCard.style.backgroundRepeat = 'no-repeat';
+                folderCard.style.backgroundPosition = 'center';
+                // Responsive height
+                const isMobile = window.innerWidth < 768;
+                folderCard.style.height = isMobile ? '150px' : '200px';
+                const marginTop = isMobile ? '50px' : '80px';
+                folderCard.dataset.folderId = folder.id;
+                folderCard.dataset.folderName = folder.name;
+                folderCard.innerHTML = `
+                    <h3 class="font-normal text-lg mb-2 text-gray-800" style="margin-top: ${marginTop};">${folder.name}</h3>
+                    <p class="text-xs text-gray-600 mb-4">Created by <span class="font-bold">${folder.user_name}</span></p>
+                `;
+                foldersGrid.appendChild(folderCard);
+            });
+
+            // Add event listeners to folder cards
+            document.querySelectorAll('.folder-card').forEach(card => {
+                card.addEventListener('click', async (e) => {
+                    selectedFolderId = e.currentTarget.dataset.folderId;
+                    const folderName = e.currentTarget.dataset.folderName;
+                    document.getElementById('selectedFolderName').textContent = folderName;
+                    await displayPictures(selectedFolderId);
+                    document.getElementById('uploadSection').classList.remove('hidden');
+                    document.getElementById('uploadBtn').disabled = selectedFiles.length === 0;
+                });
+            });
+        }
+
+        async function displayPictures(folderId) {
+            const pictures = await loadPicturesFromFolder(folderId);
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+            if (pictures.length === 0) {
+                gallery.innerHTML = '<p class="text-gray-500">No images yet.</p>';
+                return;
+            }
+            pictures.forEach(pic => {
+                const container = document.createElement('div');
+                container.className = 'relative';
+                const img = document.createElement('img');
+                img.src = pic.picture_url;
+                img.alt = 'Uploaded image';
+                img.className = 'w-full h-32 object-cover rounded cursor-pointer';
+                img.addEventListener('click', () => {
+                    window.open(pic.picture_url, '_blank');
+                });
+                container.appendChild(img);
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download';
+                downloadBtn.className = 'absolute bottom-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600';
+                downloadBtn.addEventListener('click', () => {
+                    const link = document.createElement('a');
+                    link.href = pic.picture_url;
+                    link.download = pic.picture_url.split('/').pop();
+                    link.click();
+                });
+                container.appendChild(downloadBtn);
+                gallery.appendChild(container);
+            });
+        }
+
+        // Drag and drop functionality
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        let selectedFiles = [];
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            addFiles(files);
+        });
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            addFiles(files);
+        });
+
+        function addFiles(files) {
+            selectedFiles = selectedFiles.concat(files);
+            updateFileList();
+            document.getElementById('uploadBtn').disabled = selectedFiles.length === 0 || !selectedFolderId;
+        }
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center bg-gray-100 p-2 rounded';
+                li.innerHTML = `
+                    <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    <button class="text-red-500 hover:text-red-700" onclick="removeFile(${index})">Remove</button>
+                `;
+                fileList.appendChild(li);
+            });
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+            document.getElementById('uploadBtn').disabled = selectedFiles.length === 0 || !selectedFolderId;
+        }
+
+        // Upload files
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            if (!selectedFolderId) return;
+            const urls = [];
+            for (const file of selectedFiles) {
+                const url = await uploadPictureFile(selectedFolderId, file);
+                if (url) {
+                    urls.push(url);
+                }
+            }
+            if (urls.length > 0) {
+                await addPicturesToFolder(selectedFolderId, urls);
+                showToast('Files uploaded successfully!', 'success');
+            } else {
+                showToast('Failed to upload some files.', 'error');
+            }
+            selectedFiles = [];
+            updateFileList();
+            document.getElementById('uploadBtn').disabled = true;
+        });
+
+        // Toast function
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-md text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            toast.textContent = message;
+            document.getElementById('toastContainer').appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+
+</html>

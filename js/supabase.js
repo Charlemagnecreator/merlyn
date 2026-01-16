@@ -32,14 +32,17 @@ async function createFolder(folderName, userName) {
   }
 }
 
-async function loadFolders(userName) {
+async function loadFolders(userName = null) {
   try {
     if (!supabaseClient) await initSupabase();
-    const { data, error } = await supabaseClient
+    let query = supabaseClient
       .from('folders')
       .select('*')
-      .eq('user_name', userName)
       .order('created_at', { ascending: false });
+    if (userName) {
+      query = query.eq('user_name', userName);
+    }
+    const { data, error } = await query;
     if (error) throw error;
     return data || [];
   } catch (e) {
@@ -76,6 +79,22 @@ async function addPictureToFolder(folderId, pictureUrl) {
   } catch (e) {
     console.error('Failed to add picture:', e);
     return null;
+  }
+}
+
+async function addPicturesToFolder(folderId, pictureUrls) {
+  try {
+    if (!supabaseClient) await initSupabase();
+    const pictures = pictureUrls.map(url => ({ folder_id: folderId, picture_url: url }));
+    const { data, error } = await supabaseClient
+      .from('pictures')
+      .insert(pictures)
+      .select();
+    if (error) throw error;
+    return data || [];
+  } catch (e) {
+    console.error('Failed to add pictures:', e);
+    return [];
   }
 }
 
@@ -116,17 +135,17 @@ async function uploadPictureFile(folderId, file) {
     if (!supabaseClient) await initSupabase();
     const fileName = `${Date.now()}-${file.name}`;
     const filePath = `${folderId}/${fileName}`;
-    
+
     const { error: uploadError } = await supabaseClient.storage
-      .from('pictures')
+      .from('files')
       .upload(filePath, file);
-    
+
     if (uploadError) throw uploadError;
-    
+
     const { data } = supabaseClient.storage
-      .from('pictures')
+      .from('files')
       .getPublicUrl(filePath);
-    
+
     return data?.publicUrl || null;
   } catch (e) {
     console.error('Failed to upload picture:', e);
